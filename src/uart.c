@@ -1,10 +1,9 @@
+#include "uart.h"
 #include <stdint.h>
-#include <stddef.h>
-
 
 // https://krinkinmu.github.io/2020/11/29/PL011.html
-
-const volatile uint32_t* UART_BASE = (uint32_t*) 0x09000000;
+const uint64_t virtual_address_offset = 0xffffffff00000000;
+const volatile uint32_t* UART_BASE = (uint32_t*)(0x09000000 + virtual_address_offset);
 const uint32_t DR_OFFSET = 0x000;
 const uint32_t FR_OFFSET = 0x018;
 const uint32_t IBRD_OFFSET = 0x024;
@@ -53,10 +52,8 @@ int setupUART() {
     return 0;
 }
 
-int puts(const char* data) {
+int puts(const char* data, size_t size) {
     waitForTX();
-
-    size_t size = sizeof(data);
 
     for (size_t i = 0; i < size; ++i) {
         if (data[i] == '\n') {
@@ -70,15 +67,3 @@ int puts(const char* data) {
     return 0;
 
 }
-
-
-
-int main() {
-    setupUART();
-    puts("hello");
-
-    return 0;
-}
-
-
-
