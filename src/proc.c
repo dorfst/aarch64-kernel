@@ -7,6 +7,7 @@ enum PROC_STATE {
 };
 
 struct proc_context {
+    uint64_t* l1_table;
     uint64_t general_purpose[30];
     uint64_t pc;
     uint64_t sp;

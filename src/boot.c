@@ -2,10 +2,7 @@
 #include <stddef.h>
 
 /* TODO:
- *  set up basic self alloc to make sure all used kernel memory gets correctly mapped to page tables
- *  set up list of pages
- *  mark page use types
- *  set up page tables for currently used kernel memory (identity map boot code)
+ *  direct map all of ram
 */
 
 // set up linker symbols
@@ -137,6 +134,27 @@ void* page_alloc(uint8_t pid, enum PAGE_TYPE type, struct physical_page* page_ar
 }
 
 
+void kernel_direct_map(uint64_t* l2_table, struct physical_page* page_arr, size_t page_arr_size) {
+    uint64_t output_address_table_descriptor_mask = 0x0000FFFFFFFFF000;
+    uint64_t output_address_page_descriptor_mask = 0x0000FFFFFFFFF000;
+    uint64_t kernel_mem_attribs = 0x0040000000000403;
+    uint64_t table_descriptor_mask = 0x0000000000000003;
+
+    uint64_t current = 0x40000000;
+
+    for (uint64_t i = 0; i < 64; ++i) {
+        uint64_t* l3_table = (uint64_t*)page_alloc(0, PAGE_T, page_arr, page_arr_size);
+        l2_table[i] = ((uint64_t)l3_table & output_address_table_descriptor_mask) | table_descriptor_mask;
+
+
+        for (uint64_t j = 0; j < 512; ++j) {
+            l3_table[j] = (current & output_address_page_descriptor_mask) | kernel_mem_attribs;
+            current += 0x1000;
+        }
+    }
+}
+
+
 static inline void write_tcr_el1(uint64_t val) {
     asm volatile("msr tcr_el1, %0" :: "r"(val) : "memory");
 }
@@ -190,7 +208,7 @@ void boot() {
     * 
     */
 
-    uint64_t output_address_table_decriptor_mask = 0x0000FFFFFFFFF000;
+    uint64_t output_address_table_descriptor_mask = 0x0000FFFFFFFFF000;
     uint64_t output_address_block_descriptor_mask = 0x0000FFFFC0000000;
     uint64_t output_address_page_descriptor_mask = 0x0000FFFFFFFFF000;
 
@@ -211,27 +229,18 @@ void boot() {
     uint64_t* l1_table_kernel = (uint64_t*)page_alloc(0, PAGE_T, page_arr, page_arr_size);
     uint64_t* l2_table_kernel_ram = (uint64_t*)page_alloc(0, PAGE_T, page_arr, page_arr_size);
 
-    /* 
-        hardcode how many l3 tables we'll use because despite doing a 50/50 split on kernel vs. user,
-        we're not gonna be using anywhere near that amount for the sake of this project
-    */
-    uint64_t* l3_table_kernel_ram_1 = (uint64_t*)page_alloc(0, PAGE_T, page_arr, page_arr_size);
-    uint64_t* l3_table_kernel_ram_2 = (uint64_t*)page_alloc(0, PAGE_T, page_arr, page_arr_size);
-    uint64_t* l3_table_kernel_ram_3 = (uint64_t*)page_alloc(0, PAGE_T, page_arr, page_arr_size);
-    uint64_t* l3_table_kernel_ram_4 = (uint64_t*)page_alloc(0, PAGE_T, page_arr, page_arr_size);
-
     l1_table_kernel[0] = mmio_1gb_block_entry;
 
     // set up l1 -> l2 -> l3 links for boot code page tables
-    l1_table_kernel_boot[1] = ((uint64_t)l2_table_kernel_boot & output_address_table_decriptor_mask) | table_descriptor_mask;
-    l2_table_kernel_boot[0] = ((uint64_t)l3_table_kernel_boot & output_address_table_decriptor_mask) | table_descriptor_mask;
+    l1_table_kernel_boot[1] = ((uint64_t)l2_table_kernel_boot & output_address_table_descriptor_mask) | table_descriptor_mask;
+    l2_table_kernel_boot[0] = ((uint64_t)l3_table_kernel_boot & output_address_table_descriptor_mask) | table_descriptor_mask;
 
 
     // set up table descriptor for 1GB RAM
 
     uint64_t kernel_ram_1gb_table_descriptor = (uint64_t)l2_table_kernel_ram;
 
-    l1_table_kernel[1] = (kernel_ram_1gb_table_descriptor & output_address_table_decriptor_mask) | table_descriptor_mask;
+    l1_table_kernel[1] = (kernel_ram_1gb_table_descriptor & output_address_table_descriptor_mask) | table_descriptor_mask;
 
 
     // set up page table for boot code, make sure to load this pointer to this pointer in TTBR0
@@ -244,36 +253,13 @@ void boot() {
 
     for (uint64_t i = 0; i < number_of_pages; ++i) {
         uint64_t entry = (current & output_address_page_descriptor_mask) | kernel_mem_attribs;
+        // kernel is loaded at 0x4000_8000, which is 4KB * 8 past 0x4000_0000, hence the i + 8
         l3_table_kernel_boot[i + 8] = entry;
         current += 0x1000;
     }
 
-    // set up page tables for the rest of our code
-    // uint64_t beginning_of_main_kernel = (uint64_t)(kernel_va_begin - va_offset);
-
-    // uint64_t end_of_main_kernel = (uint64_t)(l3_table_kernel_ram_3 + 0x1000);
-
-    // map rest of kernel (that is, excluding boot code) to page tables
-    uint64_t current_table_counter = 0;
-    for(uint64_t i = 0; i < page_arr_size; ++i) {
-        uint64_t* current_l3_table;
-        if (i < 512) current_l3_table = l3_table_kernel_ram_1;
-        else if (i < 1024) current_l3_table = l3_table_kernel_ram_2;
-        else if (i < 1536) current_l3_table = l3_table_kernel_ram_3;
-        else if (i < 2048) current_l3_table = l3_table_kernel_ram_4;
-        if (page_arr[i].type == KERNEL_USED || page_arr[i].type == PAGE_S || page_arr[i].type == PAGE_T) {
-            uint64_t page_start_address = (uint64_t)page_arr[i].start;
-            uint64_t page_table_entry = (uint64_t)((page_start_address & output_address_page_descriptor_mask) | kernel_mem_attribs);
-            current_l3_table[current_table_counter] = page_table_entry;
-        }
-        current_table_counter = (current_table_counter + 1) % 512;
-    }
-
-    // map l3 tables to the l2 kernel ram table
-    l2_table_kernel_ram[0] = ((uint64_t)l3_table_kernel_ram_1 & output_address_table_decriptor_mask) | table_descriptor_mask;
-    l2_table_kernel_ram[1] = ((uint64_t)l3_table_kernel_ram_2 & output_address_table_decriptor_mask) | table_descriptor_mask;
-    l2_table_kernel_ram[2] = ((uint64_t)l3_table_kernel_ram_3 & output_address_table_decriptor_mask) | table_descriptor_mask;
-    l2_table_kernel_ram[3] = ((uint64_t)l3_table_kernel_ram_4 & output_address_table_decriptor_mask) | table_descriptor_mask;
+    // direct map all of physical RAM.
+    kernel_direct_map(l2_table_kernel_ram, page_arr, page_arr_size);
     
     // set up registers required for virtual memory
 
