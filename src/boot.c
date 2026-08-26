@@ -1,10 +1,6 @@
 #include <stdint.h>
 #include <stddef.h>
 
-/* TODO:
- *  direct map all of ram
-*/
-
 // set up linker symbols
 extern uint64_t _OFFSET;
 uint64_t* va_offset = &_OFFSET;
@@ -21,8 +17,8 @@ uint64_t* kernel_va_begin = &_KERNEL_VA_BEGIN;
 extern uint64_t _KERNEL_VA_END;
 uint64_t* kernel_va_end = &_KERNEL_VA_END;
 
-extern uint64_t _EXCEPTION_VECTOR_PA;
-uint64_t* exception_vector_pa = &_EXCEPTION_VECTOR_PA;
+extern uint64_t _exception_vector_address;
+uint64_t* exception_vector_address = &_exception_vector_address;
 
 const uint64_t MAX_KERN_ADDRESS = 0x40000000 + 0x4000000;
 
@@ -190,7 +186,7 @@ static inline void write_vbar_el1(uint64_t val) {
 
 void boot() {
     // set exception vector
-    // write_vbar_el1((uint64_t)exception_vector_pa);
+    write_vbar_el1((uint64_t)exception_vector_address);
 
     // initialise page array
     struct physical_page* page_arr = (struct physical_page*)end_pa;

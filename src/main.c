@@ -1,7 +1,15 @@
 #include "uart.h"
 #include "mem.h"
+#include "proc.h"
 #include <stdint.h>
 #include <stddef.h>
+
+struct kernel_state {
+    struct proc proc_list[256];
+    struct proc proc_queue[256];
+    struct physical_page* page_arr;
+    size_t page_arr_size;
+};
 
 // linker symbols for the dummy program
 extern uint64_t _dummy_start;
@@ -33,6 +41,12 @@ uint64_t read_x10() {
     return val;
 }
 
+void yield() {
+    asm volatile("mov x8, #20\n\t"
+                 "svc #0"
+                 ::: "x8", "memory");
+}
+
 int main() {
     const uint64_t va_offset = 0xffffffff00000000;
     // uint64_t* l1_top_level_table = (uint64_t*)(read_x8() + va_offset);
@@ -46,6 +60,10 @@ int main() {
 
     setupUART();
     if (result == 0) puts("memory copy success!!!", sizeof("memory copy success!!!"));
+
+    puts("testing yield", sizeof("testing yield"));
+    yield();
+    puts("yield returned successfully!", sizeof("yield returned successfully!"));
 
     return 0;
 }

@@ -8,9 +8,6 @@ SECTIONS
 
     .boot :  {
         KEEP(*start.o(.text* .data* .bss* COMMON* .rodata*))
-        . = ALIGN(2K);
-        _EXCEPTION_VECTOR_PA = .;
-        KEEP(*exception_vector.o(.text* .data* .bss* COMMON* .rodata*))
         KEEP (*print_error.o(.text* .data* .bss* COMMON* .rodata*))
         KEEP(*uart_boot.o(.text* .data* .bss* COMMON* .rodata*))
         KEEP(*boot.o(.text* .data* .bss* COMMON* .rodata*))
@@ -44,6 +41,12 @@ SECTIONS
     .text : AT(ADDR(.text) - _OFFSET){ *(.text*) *(.rodata*) }
     .data : AT(ADDR(.data) - _OFFSET){ *(.data*) }
     .bss : AT(ADDR(.bss) - _OFFSET){ *(.bss*) *(COMMON*) }
+
+    . = ALIGN(2K);
+    .exception : AT(ADDR(.exception) - _OFFSET) {
+        _exception_vector_address = .;
+        *(.exception*)
+    }
     
     _KERNEL_VA_END = .;
 

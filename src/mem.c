@@ -78,3 +78,65 @@ uint8_t verify_copy(struct copy_info* copy_info) {
     }
     return 0;
 }
+
+uint64_t* create_tables(uint8_t pid, struct physical_page* page_arr, size_t page_arr_size, size_t proc_load_size) {
+    // not PAGE_T since that is reserved for kernel's page tables
+    uint64_t* l1 = malloc(pid, KERNEL_USED, page_arr, page_arr_size);
+
+    uint64_t va_offset = 0xffffffff00000000;
+    uint64_t output_address_table_descriptor_mask = 0x0000FFFFFFFFF000;
+    uint64_t table_descriptor_mask = 0x0000000000000003;
+
+    uint64_t two_mib = 0x200000;
+    uint64_t four_kib = 0x1000;
+    uint64_t l2_tables_needed = (proc_load_size + two_mib - 1) / two_mib;
+    uint64_t l3_tables_needed = (proc_load_size + four_kib - 1) / four_kib;
+
+    for (uint64_t i = 0; i < l2_tables_needed; ++i) {
+        uint64_t* l2 = malloc(pid, KERNEL_USED, page_arr, page_arr_size);
+        l1[i] = ((uint64_t)(l2 - va_offset) & output_address_table_descriptor_mask) | table_descriptor_mask;
+    }
+
+    for (uint64_t i = 0; i < l3_tables_needed; ++i) {
+        uint64_t* current_l2 = (uint64_t*)((l1[i] & output_address_table_descriptor_mask) + va_offset);
+        for (int j = 0; j < 512; ++j) {
+            uint64_t* l3 = malloc(pid, KERNEL_USED, page_arr, page_arr_size);
+            current_l2[j] = ((uint64_t)(l3 - va_offset) & output_address_table_descriptor_mask) | table_descriptor_mask;
+        }
+    }
+
+    return l1;
+
+}
+
+
+void populate_tables(uint64_t* l1, uint64_t* proc_start, size_t proc_load_size) {
+    uint64_t output_address_table_descriptor_mask = 0x0000FFFFFFFFF000;
+    uint64_t output_address_page_descriptor_mask = 0x0000FFFFFFFFF000;
+    uint64_t regular_mem_attribs = 0x0040000000000403;
+    // uint64_t table_descriptor_mask = 0x0000000000000003;
+    uint64_t va_offset = 0xffffffff00000000;
+
+    uint64_t l1_counter = 0;
+    uint64_t l2_counter = 0;
+    // uint64_t l3_counter = 0;
+
+    uint64_t current = (uint64_t)proc_start;
+
+    while (l1[l1_counter] != 0) {
+        uint64_t l2_entry = l1[l1_counter];
+        uint64_t* l2 = (uint64_t*)((uint64_t)(l2_entry & output_address_table_descriptor_mask) + va_offset);
+        while (l2[l2_counter] != 0 && current < (uint64_t)proc_start + proc_load_size) {
+            uint64_t l3_entry = l2[l2_counter];
+            uint64_t* l3 = (uint64_t*)((uint64_t)(l3_entry & output_address_table_descriptor_mask) + va_offset);
+            for (uint64_t i = 0; i < 512; ++i) {
+                l3[i] = (current & output_address_page_descriptor_mask) | regular_mem_attribs;
+                current += 0x1000;
+            }
+
+            ++l2_counter;
+        }
+        ++l1_counter;
+    }
+
+}

@@ -1,4 +1,4 @@
-
+.section .exception, "ax", %progbits
 exception_vector:
     .balign 0x200
     b handle_state
@@ -23,13 +23,19 @@ handle_state:
     stp x28, x29, [sp, #-16]!
     str x30, [sp, #-8]!
 
-    // pass these fault registers to our print_error function
-    mrs x0, esr_el1
-    mrs x1, far_el1
-    mrs x2, elr_el1
 
-    bl print_error
+    bl syscall_router
+
     b load_state
+
+
+
+syscall_router:
+    cmp x8, #20
+    b.ne .
+    // x30's address will link back to handle_state and this is the intended behaviour
+    b yield_handler
+
 
 
 load_state:
@@ -49,5 +55,5 @@ load_state:
     ldp x4, x5, [sp], 16
     ldp x2, x3, [sp], 16
     ldp x0, x1, [sp], 16
-    b .
+    eret
 
