@@ -1,4 +1,4 @@
-ldr x3, #0
+mov x3, #0
 b loop
 
 loop:

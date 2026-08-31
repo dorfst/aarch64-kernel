@@ -6,6 +6,7 @@ exception_vector:
 .balign 2048
 handle_state:
     // save all general purpose registers, registers will be overwritten by handler
+    msr spsel, #1
     stp x0, x1, [sp, #-16]!
     stp x2, x3, [sp, #-16]!
     stp x4, x5, [sp, #-16]!

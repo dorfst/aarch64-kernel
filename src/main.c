@@ -47,6 +47,10 @@ void yield() {
                  ::: "x8", "memory");
 }
 
+
+
+extern void load_process(struct proc_context* context);
+
 int main() {
     const uint64_t va_offset = 0xffffffff00000000;
     // uint64_t* l1_top_level_table = (uint64_t*)(read_x8() + va_offset);
@@ -61,9 +65,36 @@ int main() {
     setupUART();
     if (result == 0) puts("memory copy success!!!", sizeof("memory copy success!!!"));
 
-    puts("testing yield", sizeof("testing yield"));
-    yield();
-    puts("yield returned successfully!", sizeof("yield returned successfully!"));
+    // uint64_t text_start_offset = (uint64_t)dummy_text_start - (uint64_t)dummy_start;
+
+    uint64_t* l1 = create_tables(1, page_arr, page_arr_size, (size_t)copy_info.size);
+    populate_tables(l1, (uint64_t*)copy_info.destination, copy_info.size);
+
+    struct proc test_process = {1, READY, 0, NULL, (uint64_t*)copy_info.destination};
+
+    struct proc_context test_process_context;
+    test_process_context.l1_table = l1;
+    for (int i = 0; i < 30; ++i) {
+        if (i != 2) {
+            test_process_context.general_purpose[i] = 0;
+        }
+        else {
+            test_process_context.general_purpose[i] = 10;
+        }
+    }
+    test_process_context.l1_table = (uint64_t*)((uint64_t)l1 - va_offset);
+    test_process_context.pc = 0;
+    test_process_context.sp = 0;
+    test_process_context.spsr = 0;
+
+    test_process.context = &test_process_context;
+
+    
+
+
+
+    load_process(&test_process_context);
+
 
     return 0;
 }

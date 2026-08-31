@@ -1,16 +1,16 @@
 #ifndef PROC
 #define PROC
-
+#include <stdint.h>
 enum PROC_STATE {
     READY, RUNNING, DEAD
 };
 
 struct proc_context {
     uint64_t* l1_table;
-    uint64_t general_purpose[30];
+    uint64_t general_purpose[31];
     uint64_t pc;
     uint64_t sp;
-    uint64_t pstate;
+    uint64_t spsr;
 };
 
 struct proc {
