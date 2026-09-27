@@ -4,13 +4,6 @@
 #include <stdint.h>
 #include <stddef.h>
 
-struct kernel_state {
-    struct proc proc_list[256];
-    struct proc proc_queue[256];
-    struct physical_page* page_arr;
-    size_t page_arr_size;
-};
-
 // linker symbols for the dummy program
 extern uint64_t _dummy_start;
 uint64_t* dummy_start = &_dummy_start;
@@ -48,8 +41,8 @@ void yield() {
 }
 
 
-
-extern void load_process(struct proc_context* context);
+struct kernel_state kernel_state;
+struct proc_queue queue;
 
 int main() {
     const uint64_t va_offset = 0xffffffff00000000;
@@ -57,43 +50,30 @@ int main() {
     struct physical_page* page_arr = (struct physical_page*)(read_x9() + va_offset);
     size_t page_arr_size = (size_t)read_x10();
 
-    struct copy_info copy_info = cmalloc(dummy_start, dummy_end, 1, USER_USED, page_arr, page_arr_size);
-    copy(&copy_info);
+    queue.back = -1;
 
-    uint8_t result = verify_copy(&copy_info);
+    kernel_state.proc_queue = queue;
+    kernel_state.page_arr = page_arr;
+    kernel_state.page_arr_size = page_arr_size;
+
+    struct copy_info copy_info_1 = cmalloc(dummy_start, dummy_end, 1, USER_USED, page_arr, page_arr_size);
+    copy(&copy_info_1);
+
+    uint8_t result = verify_copy(&copy_info_1);
 
     setupUART();
     if (result == 0) puts("memory copy success!!!", sizeof("memory copy success!!!"));
 
     // uint64_t text_start_offset = (uint64_t)dummy_text_start - (uint64_t)dummy_start;
 
-    uint64_t* l1 = create_tables(1, page_arr, page_arr_size, (size_t)copy_info.size);
-    populate_tables(l1, (uint64_t*)copy_info.destination, copy_info.size);
+    struct proc process = proc_create(1, 10, &kernel_state.proc_queue, &copy_info_1, kernel_state.page_arr, kernel_state.page_arr_size);
 
-    struct proc test_process = {1, READY, 0, NULL, (uint64_t*)copy_info.destination};
+    struct copy_info copy_info_2 = cmalloc(dummy_start, dummy_end, 2, USER_USED, page_arr, page_arr_size);
+    copy(&copy_info_2);
+    proc_create(2, 20, &kernel_state.proc_queue, &copy_info_2, kernel_state.page_arr, kernel_state.page_arr_size);
 
-    struct proc_context test_process_context;
-    test_process_context.l1_table = l1;
-    for (int i = 0; i < 30; ++i) {
-        if (i != 2) {
-            test_process_context.general_purpose[i] = 0;
-        }
-        else {
-            test_process_context.general_purpose[i] = 10;
-        }
-    }
-    test_process_context.l1_table = (uint64_t*)((uint64_t)l1 - va_offset);
-    test_process_context.pc = 0;
-    test_process_context.sp = 0;
-    test_process_context.spsr = 0;
-
-    test_process.context = &test_process_context;
-
-    
-
-
-
-    load_process(&test_process_context);
+    process.state = RUNNING;
+    load_process(&process.context);
 
 
     return 0;

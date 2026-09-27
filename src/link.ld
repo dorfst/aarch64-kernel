@@ -18,7 +18,7 @@ SECTIONS
     . = ALIGN(2K);
     _dummy_load_address = .;
 
-    .dummy 0x10000: AT(_dummy_load_address) {
+    .dummy 0x0: AT(_dummy_load_address) {
         _dummy_start_va = .;
         _dummy_text_start_va = .;
         KEEP(*dummy.o(.text*))
@@ -27,7 +27,7 @@ SECTIONS
         _dummy_end_va = .;
     }
 
-    . = _dummy_load_address + (_dummy_end_va - 0x10000);
+    . = _dummy_load_address + (_dummy_end_va - 0x0);
     _dummy_end = . + _OFFSET;
     _dummy_start = _dummy_load_address + _OFFSET;
     _dummy_text_start = (_dummy_load_address + (_dummy_text_start_va - _dummy_start_va)) + _OFFSET;

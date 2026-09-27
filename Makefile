@@ -30,7 +30,7 @@ $(OBJDIR)/%.o: $(SRCDIR)/%.c
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.s
 	mkdir -p $(OBJDIR)
-	$(AS) -c $< -o $@
+	$(AS) -c -g $< -o $@
 
 $(TARGET):$(OBJS)
 	$(LD) $(LDFLAGS) $(OBJS) -o $(TARGET)

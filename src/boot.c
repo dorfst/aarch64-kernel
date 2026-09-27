@@ -279,7 +279,7 @@ void boot() {
     uint64_t enable_mmu = read_sctlr_el1() | 0x1;
     write_sctlr_el1(enable_mmu);
 
-    // TODO: pass important pointers to main function, pre-load into argument registers now
+    // pass some stuff through these registers so that the main function has them
     asm volatile("mov x8, %0" :: "r"(l1_table_kernel) : "memory");
     asm volatile("mov x9, %0" :: "r"(page_arr) : "memory");
     asm volatile("mov x10, %0" :: "r"(page_arr_size) : "memory");

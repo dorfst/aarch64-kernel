@@ -46,6 +46,11 @@ void* malloc(uint8_t pid, enum PAGE_TYPE type, struct physical_page* page_arr, s
 
 }
 
+void free(uint64_t* page_address, struct physical_page* page_arr) {
+    uint64_t index = (uint64_t)page_address / 0x1000;
+    page_arr[index].type = (uint64_t)page_address < 0x440000000 ? KERNEL_FREE : USER_FREE;
+}
+
 // special malloc for copying data from one place to another
 struct copy_info cmalloc(uint64_t* start, uint64_t* end, uint8_t pid, enum PAGE_TYPE type, struct physical_page* page_arr, size_t page_arr_size) {
     uint64_t size = (uint64_t)((uint64_t)end - (uint64_t)start);
@@ -143,4 +148,14 @@ void populate_tables(uint64_t* l1, uint64_t* proc_start, size_t proc_load_size) 
         ++l1_counter;
     }
 
+}
+
+// for copying structs by value
+void* memcpy(void *dest, const void *src, size_t n) {
+    uint8_t *d = (uint8_t *)dest;
+    const uint8_t *s = (const uint8_t *)src;
+    for (size_t i = 0; i < n; i++) {
+        d[i] = s[i];
+    }
+    return dest;
 }
