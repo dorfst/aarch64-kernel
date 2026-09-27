@@ -1,7 +1,3 @@
-//
-// Created by dorian on 14/08/2026.
-//
-
 #ifndef MEM
 #define MEM
 

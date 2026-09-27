@@ -48,7 +48,7 @@ void* malloc(uint8_t pid, enum PAGE_TYPE type, struct physical_page* page_arr, s
 
 void free(uint64_t* page_address, struct physical_page* page_arr) {
     uint64_t index = (uint64_t)page_address / 0x1000;
-    page_arr[index].type = (uint64_t)page_address < 0x440000000 ? KERNEL_FREE : USER_FREE;
+    page_arr[index].type = (uint64_t)page_address < 0x44000000 ? KERNEL_FREE : USER_FREE;
 }
 
 // special malloc for copying data from one place to another

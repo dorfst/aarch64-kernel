@@ -46,7 +46,6 @@ struct proc_queue queue;
 
 int main() {
     const uint64_t va_offset = 0xffffffff00000000;
-    // uint64_t* l1_top_level_table = (uint64_t*)(read_x8() + va_offset);
     struct physical_page* page_arr = (struct physical_page*)(read_x9() + va_offset);
     size_t page_arr_size = (size_t)read_x10();
 
@@ -64,7 +63,6 @@ int main() {
     setupUART();
     if (result == 0) puts("memory copy success!!!", sizeof("memory copy success!!!"));
 
-    // uint64_t text_start_offset = (uint64_t)dummy_text_start - (uint64_t)dummy_start;
 
     struct proc process = proc_create(1, 10, &kernel_state.proc_queue, &copy_info_1, kernel_state.page_arr, kernel_state.page_arr_size);
 
