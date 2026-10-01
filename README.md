@@ -25,8 +25,36 @@ There are a few dependencies to sort out:
 There are flags in the Makefile already to make sure that the linux compiler ends up compiling for
 a freestanding environment.
 
-Here's a list of steps of how to run this project. You will need two terminal windows/tabs:
-1. In one, run `qemu-debug.sh`
+The recommended way is to run `qemu-quickstart.sh`:
+1. run `./qemu-quickstart.sh`
+2. press `Ctrl+A` and `Ctrl+X` to exit QEMU when the kernel halts.
+
+This is the expected output:
+```
+memory copy success!!!yielding process 0x0000000000000001
+loading process 0x0000000000000002
+yielding process 0x0000000000000002
+loading process 0x0000000000000001
+yielding process 0x0000000000000001
+loading process 0x0000000000000002
+yielding process 0x0000000000000002
+loading process 0x0000000000000001
+quitting process 0x0000000000000001
+freeing memory
+loading process 0x0000000000000002
+yielding process 0x0000000000000002
+loading process 0x0000000000000002
+yielding process 0x0000000000000002
+loading process 0x0000000000000002
+yielding process 0x0000000000000002
+loading process 0x0000000000000002
+quitting process 0x0000000000000002
+freeing memory
+kernel done, halting now
+```
+
+If you want to run in debug mode, here's a list of steps of how to run this project. You will need two terminal windows/tabs:
+1. In one, run `./qemu-debug.sh`
 2. In the second, run `gdb-multiarch obj/kernel.elf` or `gdb obj/kernel.elf` depending on your system.
 3. In the `gdb` window/tab, type in `target remote localhost:1234`
 4. (Optional) type in `break main.c:76` to set a breakpoint nearest the actual kernel's scheduling of processes, then type `continue`
@@ -126,10 +154,14 @@ rabbit hole when it comes to things like ASIDs and proper management of the TLB.
 # Processes
 ## Process control blocks
 Process control blocks contain essential information like process ID and process context.
-If you read `proc.h` you may notice that there is an `exec_time` field that never gets used. My original idea
+If you read [`proc.h`](src/proc.h) you may notice that there is an `exec_time` field that never gets used. My original idea
 for the kernel was to use preemptive scheduling based on timer interrupts so I could approximately calculate the time
 for which a process has been running, but due to time constraints I settled
 on a simpler cooperative scheduling approach.
+
+As an extra note, you may notice that processes have a process state, but in this kernel they're actually
+not really used for anything. They're there because it's a standard thing to have and I wasn't sure if I was
+going to need them or not.
 
 ## Scheduling
 There is a process queue (10 processes max) from which the scheduler switches processes.

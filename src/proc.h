@@ -21,7 +21,7 @@ struct proc_context {
 };
 
 struct proc {
-    uint8_t pid;
+    uint64_t pid;
     enum PROC_STATE state;
     uint64_t exec_time;
     struct proc_context context;
@@ -48,6 +48,6 @@ bool queue_is_empty(struct proc_queue* queue);
 void shift_queue(struct proc_queue* queue);
 void push_queue(struct proc_queue* queue, struct proc proc);
 void pop_queue(struct proc_queue* queue);
-struct proc proc_create(uint8_t pid, uint64_t x2_value, struct proc_queue* proc_queue, struct copy_info* copy_info, struct physical_page* page_arr, size_t page_arr_size);
+struct proc proc_create(uint64_t pid, uint64_t x2_value, struct proc_queue* proc_queue, struct copy_info* copy_info, struct physical_page* page_arr, size_t page_arr_size);
 
 #endif

@@ -52,6 +52,55 @@ int setupUART() {
     return 0;
 }
 
+// nibble is 4 bits but there is no 4-bit type
+char nibble_to_hex(uint8_t nibble) {
+    if (nibble == 0) return '0';
+    else if (nibble == 1) return '1';
+    else if (nibble == 2) return '2';
+    else if (nibble == 3) return '3';
+    else if (nibble == 4) return '4';
+    else if (nibble == 5) return '5';
+    else if (nibble == 6) return '6';
+    else if (nibble == 7) return '7';
+    else if (nibble == 8) return '8';
+    else if (nibble == 9) return '9';
+    else if (nibble == 10) return 'A';
+    else if (nibble == 11) return 'B';
+    else if (nibble == 12) return 'C';
+    else if (nibble == 13) return 'D';
+    else if (nibble == 14) return 'E';
+    else if (nibble == 15) return 'F';
+
+    return '\0';
+}
+
+void uint64_t_to_string(char* str, uint64_t val) {
+    // each digit needs its ASCII equivalent
+    /*
+    * how to isolate digits? read ptr directly.
+    * little-endian, so first byte is the last digit
+    */
+    uint8_t* val_ptr = (uint8_t*)&val;
+
+    uint64_t array_counter = 17;
+    str[0] = '0';
+    str[1] = 'x';
+
+    for (uint64_t i = 0; i < 8; ++i) {
+        uint8_t high_bits = (val_ptr[i] & 0xf0) >> 4;
+        uint8_t low_bits = (val_ptr[i] & 0xf);
+
+        char high_bits_char = nibble_to_hex(high_bits);
+        char low_bits_char = nibble_to_hex(low_bits);
+
+        str[array_counter] = low_bits_char;
+        str[array_counter - 1] = high_bits_char;
+
+        array_counter -= 2;
+
+    }
+}
+
 int puts(const char* data, size_t size) {
     waitForTX();
 

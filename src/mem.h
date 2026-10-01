@@ -20,14 +20,14 @@ struct copy_info {
     uint64_t size;
 };
 
-void* frame_alloc(uint8_t pid, enum PAGE_TYPE type, struct physical_page* page_arr, size_t page_arr_size);
+void* frame_alloc(uint64_t pid, enum PAGE_TYPE type, struct physical_page* page_arr, size_t page_arr_size);
 void zero_page(uint64_t* page_address);
-void* malloc(uint8_t pid, enum PAGE_TYPE type, struct physical_page* page_arr, size_t page_arr_size);
+void* malloc(uint64_t pid, enum PAGE_TYPE type, struct physical_page* page_arr, size_t page_arr_size);
 void free(uint64_t* page_address, struct physical_page* page_arr);
-struct copy_info cmalloc(uint64_t* start, uint64_t* end, uint8_t pid, enum PAGE_TYPE type, struct physical_page* page_arr, size_t page_arr_size);
+struct copy_info cmalloc(uint64_t* start, uint64_t* end, uint64_t pid, enum PAGE_TYPE type, struct physical_page* page_arr, size_t page_arr_size);
 void copy(struct copy_info* copy_info);
 uint8_t verify_copy(struct copy_info* copy_info);
-uint64_t* create_tables(uint8_t pid, struct physical_page* page_arr, size_t page_arr_size, size_t proc_load_size);
+uint64_t* create_tables(uint64_t pid, struct physical_page* page_arr, size_t page_arr_size, size_t proc_load_size);
 void populate_tables(uint64_t* l1, uint64_t* proc_start, size_t proc_load_size);
 void *memcpy(void *dest, const void *src, size_t n);
 

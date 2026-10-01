@@ -37,7 +37,7 @@ void pop_queue(struct proc_queue* queue) {
     }
 }
 
-struct proc proc_create(uint8_t pid, uint64_t x2_val, struct proc_queue* proc_queue, struct copy_info* copy_info, struct physical_page* page_arr, size_t page_arr_size) {
+struct proc proc_create(uint64_t pid, uint64_t x2_val, struct proc_queue* proc_queue, struct copy_info* copy_info, struct physical_page* page_arr, size_t page_arr_size) {
     const uint64_t va_offset = 0xffffffff00000000;
     uint64_t* l1 = create_tables(pid, page_arr, page_arr_size, (size_t)copy_info->size);
     populate_tables(l1, (uint64_t*)copy_info->destination, copy_info->size);
