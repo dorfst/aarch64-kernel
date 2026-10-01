@@ -27,7 +27,7 @@ a freestanding environment.
 
 The recommended way is to run `qemu-quickstart.sh`:
 1. run `./qemu-quickstart.sh`
-2. press `Ctrl+A` and `Ctrl+X` to exit QEMU when the kernel halts.
+2. press `Ctrl+A+x` (that is, `Ctrl+A`, then `x`) to exit QEMU when the kernel halts.
 
 This is the expected output:
 ```
@@ -57,8 +57,9 @@ If you want to run in debug mode, here's a list of steps of how to run this proj
 1. In one, run `./qemu-debug.sh`
 2. In the second, run `gdb-multiarch obj/kernel.elf` or `gdb obj/kernel.elf` depending on your system.
 3. In the `gdb` window/tab, type in `target remote localhost:1234`
-4. (Optional) type in `break main.c:76` to set a breakpoint nearest the actual kernel's scheduling of processes, then type `continue`
+4. (Optional) type in `break main.c:74` to set a breakpoint nearest the actual kernel's scheduling of processes, then type `continue`
 5. (Optional) type in `display /ni $pc`. This gives you the next `n` instructions to be executed every time you `s/n` or `si/ni`
+6. Whenever you're done, exit with `Ctrl+A+x`
 
 Slightly complicated, but due to the nature of the kernel, and the fact that you can see the
 kernel executing user processes then switching back to the kernel to context switch, that's how
@@ -100,6 +101,19 @@ two exception levels.
 In order to understand the work that went into this, I recommend that you check out `DEBUGGING.md`
 to get a clearer picture of how difficult a project like this can be.
 
+# Current Limitations
+- very unsafe memory usage. While functions are made to issue null pointers in the event of some problem, they are never actually checked
+- fixed-size memory allocation
+- generally speaking a lot of hardcoded sections
+- assumes that you're using my [`dummy.s`](src/dummy.s) program, and all of the stuff that goes into loading two instances of that program is hardcoded.
+- memory leak whenever a system call happens. A frame is allocated for the handler but the syscall handlers call to load a process which never returns back, and instead goes down an exception level with `eret`
+- faults are not caught well unless you go through the whole kernel with GDB
+- expects to run with exactly 128 MiB of RAM
+- inefficient TLB measurement
+
+This is not necessarily an exhaustive list, as there may have been things I've missed or only mentioned in the main document body.
+
+
 # Memory
 ## Layout
 The memory layout is physically that the lower half of RAM belongs to the kernel
@@ -133,6 +147,9 @@ for more granular allocation. This is deliberate as the aim of this project was 
 which is a rabbit hole in and of itself.
 
 Upon both allocation and freeing the page is zeroed (i.e. all bytes are set to zero).
+
+In the current state of freeing memory, this only frees a process's program page. The page tables are not freed as of now.
+
 
 ## Virtual memory
 Virtual memory on the AArch64 architecture works by using multi-level page tables (generally speaking L0-L3, although more levels do exist), with

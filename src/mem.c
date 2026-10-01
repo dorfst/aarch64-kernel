@@ -93,10 +93,10 @@ uint64_t* create_tables(uint64_t pid, struct physical_page* page_arr, size_t pag
     uint64_t output_address_table_descriptor_mask = 0x0000FFFFFFFFF000;
     uint64_t table_descriptor_mask = 0x0000000000000003;
 
+    uint64_t one_gib = 0x40000000;
     uint64_t two_mib = 0x200000;
-    uint64_t four_kib = 0x1000;
-    uint64_t l2_tables_needed = (proc_load_size + two_mib - 1) / two_mib;
-    uint64_t l3_tables_needed = (proc_load_size + four_kib - 1) / four_kib;
+    uint64_t l2_tables_needed = (proc_load_size + one_gib - 1) / one_gib;
+    uint64_t l3_tables_needed = ((proc_load_size + two_mib - 1) / two_mib);
 
     for (uint64_t i = 0; i < l2_tables_needed; ++i) {
         uint64_t* l2 = malloc(pid, KERNEL_USED, page_arr, page_arr_size);
