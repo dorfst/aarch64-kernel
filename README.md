@@ -65,7 +65,6 @@ kernel executing user processes then switching back to the kernel to context swi
 I'd recommend to run it.
 
 If you just want it to run, you can always enter the debugger and type in `continue`, and look at the output.
-However, you won't get a good view of the instruction flow that way, and it will loop a few times before hitting an exception.
 
 # Motivation
 Much like the bytecode VM project, I wanted to do something different, difficult, something that
