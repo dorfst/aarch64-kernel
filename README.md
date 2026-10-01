@@ -113,6 +113,7 @@ to get a clearer picture of how difficult a project like this can be.
 - exception handler assumes exceptions happen only for system calls, so errors are not caught properly, just a kernel hang
 - expects to run with exactly 128 MiB of RAM
 - inefficient TLB management
+- process creation bug where 512 L3 tables are made even for a process that only takes up one single page
 
 This is not necessarily an exhaustive list, as there may have been things I've missed or only mentioned in the main document body.
 
