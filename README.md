@@ -106,8 +106,8 @@ to get a clearer picture of how difficult a project like this can be.
 - fixed-size memory allocation
 - generally speaking a lot of hardcoded sections
 - assumes that you're using my [`dummy.s`](src/dummy.s) program, and all of the stuff that goes into loading two instances of that program is hardcoded.
-- memory leak whenever a system call happens. A frame is allocated for the handler but the syscall handlers call to load a process which never returns back, and instead goes down an exception level with `eret`
-- faults are not caught well unless you go through the whole kernel with GDB
+- excess memory usage whenever a system call happens. A frame is allocated for the handler but the syscall handlers call to load a process which never returns back, and instead goes down an exception level with `eret`
+- exception handler assumes exceptions happen only for system calls, so errors are not caught properly, just a kernel hang
 - expects to run with exactly 128 MiB of RAM
 - inefficient TLB measurement
 
