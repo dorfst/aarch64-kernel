@@ -112,7 +112,7 @@ to get a clearer picture of how difficult a project like this can be.
 - excess memory usage whenever a system call happens. A frame is allocated for the handler but the syscall handlers call to load a process which never returns back, and instead goes down an exception level with `eret`
 - exception handler assumes exceptions happen only for system calls, so errors are not caught properly, just a kernel hang
 - expects to run with exactly 128 MiB of RAM
-- inefficient TLB measurement
+- inefficient TLB management
 
 This is not necessarily an exhaustive list, as there may have been things I've missed or only mentioned in the main document body.
 
