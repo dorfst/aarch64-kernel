@@ -3,6 +3,8 @@ This project is a small kernel that sets up virtual memory and runs
 simple processes that use cooperative scheduling, displaying kernel status
 by printing to PL011 UART.
 
+This project does get updated from time-to-time, so what you see is not necessarily the final product.
+
 AArch64, bare-metal, virtual memory (MMU), MMIO, exception handling, linker scripts, process scheduling, cross-compilation toolchains
 
 # If you're short on time
