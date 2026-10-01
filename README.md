@@ -104,6 +104,7 @@ to get a clearer picture of how difficult a project like this can be.
 # Current Limitations
 - very unsafe memory usage. While functions are made to issue null pointers in the event of some problem, they are never actually checked
 - fixed-size memory allocation
+- assumes that a program can fit in one page
 - generally speaking a lot of hardcoded sections
 - assumes that you're using my [`dummy.s`](src/dummy.s) program, and all of the stuff that goes into loading two instances of that program is hardcoded.
 - excess memory usage whenever a system call happens. A frame is allocated for the handler but the syscall handlers call to load a process which never returns back, and instead goes down an exception level with `eret`

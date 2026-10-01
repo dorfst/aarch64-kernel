@@ -135,7 +135,7 @@ The problem is that for kernel memory the permission bits only allow for privile
 This is what some would call good design. It's certainly not good design to put that for memory that can be
 accessed in EL0 so that you get permission faults at level 3.
 
-The solution is obvious: make sure that table descriptors and page descriptors allow for unprivileged memory access.
+The solution is obvious: make sure that table descriptors and page descriptors allow for unprivileged execution and access.
 Specifically, the `UXNTable` bit for table descriptors and the `AP` bits for page descriptors.
 
 Don't assume that because it works here that it will work there, especially when it concerns configuration.

@@ -27,6 +27,8 @@ save_process:
     msr spsel, #1
     isb
 
+    mrs x1, spsr_el1
+    str x1, [x0, #(PROC_CONTEXT_SPSR_OFFSET)]
 
     str x2, [x0, #(PROC_CONTEXT_GP_OFFSET + 2 * REG_SIZE)]
     str x3, [x0, #(PROC_CONTEXT_GP_OFFSET + 3 * REG_SIZE)]
